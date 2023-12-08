@@ -1,0 +1,8 @@
+# No pycache
+**/__pycache__
+
+# No IDE related directories
+**/.idea
+
+# Make sure not to pull in dependencies
+**/venv
