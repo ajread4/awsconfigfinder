@@ -40,7 +40,11 @@ export AWS_REGION="<region>"
 ```
 If the tokens or keys are invalid or expired, awsconfigfinder will throw the following error: ```ClientError('An error occurred (InvalidToken) when calling the ListObjectsV2 operation: The provided token is malformed or otherwise invalid.')```. 
 
-## Examples
+## Running Snapshots
+
+awsconfigfinder does not run snapshots for you. Rather, it relies on two snapshots previously completed. Guidance on running snapshots within AWS can be found [here](https://docs.aws.amazon.com/config/latest/developerguide/deliver-snapshot-cli.html) with specifics about AWS Config delivery channels [here](https://docs.aws.amazon.com/config/latest/developerguide/deliver-snapshot-cli.html). 
+
+# Examples
 1. Determine if there was a new EC2 instance deployed between two snapshots. 
 ```
 $ python3 configfinder.py s3://[S3 Bucket with First Snapshot].json.gz s3://[S3 Bucket with Second Snapshot].json.gz
@@ -63,6 +67,6 @@ Unique Instance: i-06fbbf2d9707dd34b not found in first snapshot with launch tim
 
 # Author
 All of the code was written by me, AJ Read. 
-- Twitter[ajread3](https://twitter.com/ajread3)
-- Github [ajread4](https://github.com/ajread4)
-- LinkedIn [Austin Read](https://www.linkedin.com/in/austin-read-88953b189/)
+- [Twitter](https://twitter.com/ajread3)
+- [Github](https://github.com/ajread4)
+- [LinkedIn](https://www.linkedin.com/in/austin-read-88953b189/)
