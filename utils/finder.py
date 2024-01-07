@@ -40,7 +40,11 @@ class Finder():
 	def parse_EC2Instance(self, df):
 		return df[df['resourceType']=='AWS::EC2::Instance']
 
-	# Find difference in instances between two Snapshots
+	# Drill down on only IAM User within the Snapshot
+	def parse_IAMUser(self, df):
+		return df[df['resourceType']=='AWS::IAM::User']
+
+	# Find difference in instances between two Snapshotss
 	def find_EC2(self, first_snapshot,second_snapshot):
 		snapshot1_df=self.find_configurationItems(first_snapshot)
 		snapshot2_df=self.find_configurationItems(second_snapshot)
@@ -97,3 +101,84 @@ class Finder():
 		        	EC2_diff=True 
 		    if not EC2_diff: 
 		        print(f"No differences detected between two provided snapshots")
+
+	# Find difference in Access Keys between two snapshots 
+	def find_AccessKey(self,first_snapshot,second_snapshot):
+		# Pre-Process the snapshots into dataframes 
+		snapshot1_df=self.find_configurationItems(first_snapshot)
+		snapshot2_df=self.find_configurationItems(second_snapshot)
+
+		snapshot1_df=self.parse_IAMUser(snapshot1_df)
+		snapshot2_df=self.parse_IAMUser(snapshot2_df)
+
+		snapshot1_df=self.find_configuration(snapshot1_df)
+		snapshot2_df=self.find_configuration(snapshot2_df)
+
+		AccessKey_diff=False
+		# Loop through the dataframes and determine the anomalous access keys 
+		if len(snapshot1_df) > len(snapshot2_df):
+			for row in snapshot1_df.itertuples():
+				print('Starting Analysis per User')
+				df1=snapshot1_df[snapshot1_df['userName']==row.userName]
+				df2=snapshot2_df[snapshot2_df['userName']==row.userName]
+				if (df1.empty or df2.empty):
+					print(f'New User Discovered: {row.userName} in Snapshot 1')
+				else: 
+					for row in df1.itertuples():
+						USER_tags_df1=pd.json_normalize(row.tags)
+					for row in df2.itertuples():
+						USER_tags_df2=pd.json_normalize(row.tags)
+					tags_test_df1 = USER_tags_df1[USER_tags_df1['key'].str.contains('AKIA')]
+					tags_test_df2 = USER_tags_df2[USER_tags_df2['key'].str.contains('AKIA')]
+					if not (tags_test_df1.empty and tags_test_df2.empty):
+						print(f'New User Access Keys Discovered for User: {row.userName}')
+						if tags_test_df1.empty:
+							print(f'New User Access Keys within Snaphshot 2')
+						else: 
+							print(f'New User Access Keys within Snaphshot 1')						
+						AccessKey_diff=True
+
+		elif len(snapshot1_df) < len(snapshot2_df):
+			for row in snapshot2_df.itertuples():
+				df1=snapshot1_df[snapshot1_df['userName']==row.userName]
+				df2=snapshot2_df[snapshot2_df['userName']==row.userName]
+				if (df1.empty or df2.empty):
+					print(f'New User Discovered: {row.userName} in Snapshot 2')
+				else: 
+					for row in df1.itertuples():
+						USER_tags_df1=pd.json_normalize(row.tags)
+					for row in df2.itertuples():
+						USER_tags_df2=pd.json_normalize(row.tags)
+					tags_test_df1 = USER_tags_df1[USER_tags_df1['key'].str.contains('AKIA')]
+					tags_test_df2 = USER_tags_df2[USER_tags_df2['key'].str.contains('AKIA')]
+					if not (tags_test_df1.empty and tags_test_df2.empty):
+						print(f'New User Access Keys Discovered for User: {row.userName}')
+						if tags_test_df1.empty:
+							print(f'New User Access Keys within Snaphshot 2')
+						else: 
+							print(f'New User Access Keys within Snaphshot 1')								
+						AccessKey_diff=True
+
+		else:
+			for row in snapshot1_df.itertuples():
+				df1=snapshot1_df[snapshot1_df['userName']==row.userName]
+				df2=snapshot2_df[snapshot2_df['userName']==row.userName]
+				if (df1.empty or df2.empty):
+					print(f'New User Discovered: {row.userName}')
+				else: 
+					for row in df1.itertuples():
+						USER_tags_df1=pd.json_normalize(row.tags)
+					for row in df2.itertuples():
+						USER_tags_df2=pd.json_normalize(row.tags)
+					tags_test_df1 = USER_tags_df1[USER_tags_df1['key'].str.contains('AKIA')]
+					tags_test_df2 = USER_tags_df2[USER_tags_df2['key'].str.contains('AKIA')]
+					if not (tags_test_df1.empty and tags_test_df2.empty):
+						print(f'New User Access Keys Discovered for User: {row.userName}')
+						if tags_test_df1.empty:
+							print(f'New User Access Keys within Snaphshot 2')
+						else: 
+							print(f'New User Access Keys within Snaphshot 1')
+						AccessKey_diff=True
+		if not AccessKey_diff: 
+			print('No AccessKey Differences Discovered')
+
