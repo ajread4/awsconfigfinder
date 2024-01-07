@@ -4,7 +4,7 @@ awsconfigfinder is a capability to identify anomalies in AWS Config Snapshots lo
 
 ## Current State
 
-Right now, the capability only finds differences in EC2 instances. There are plans to build more detections in [Planned Features](#planned-features). 
+Right now, the capability only finds differences in EC2 instances or the creation of new AccessKeys for a user. There are plans to build more detections in [Planned Features](#planned-features). Each of the new features plans to map to [MITRE ATT&CK](https://attack.mitre.org/matrices/enterprise/cloud/) if possible. 
 
 # Install
 ```
@@ -31,7 +31,7 @@ options:
 
 ## Environment Variables
 
-awsconfigfinder relies on environment variables to create a session with [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html). In order to successfuly create a session, you must add the below environment variables for the AWS IAM Role with at least read and write access to the snapshot S3 bucket. 
+awsconfigfinder relies on environment variables to create a session with [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html). In order to successfuly create a session, you must add the below environment variables for the AWS IAM Role with at least read and write access to the snapshot S3 bucket and with the AWS__ConfigRole. Guidance on the AWS_ConfigRole can be found [here](https://docs.aws.amazon.com/config/latest/developerguide/security-iam-awsmanpol.html). 
 ```
 export AWS_ACCESS_KEY_ID="<key>"
 export AWS_SECRET_ACCESS_KEY="<key>"
@@ -51,7 +51,10 @@ $ python3 configfinder.py s3://[S3 Bucket with First Snapshot].json.gz s3://[S3 
 Difference in Number of EC2 Instances since Snaphshot 2 is larger than Snapshot 1
 Unique Instance: i-06fbbf2d9707dd34b not found in first snapshot with launch time: 2023-12-03T18:41:35.000Z
 ```
+2. Determine if new cloud credentials were created for a user to detect [Account Manipulation](https://attack.mitre.org/techniques/T1098/001/). 
+```
 
+```
 # File and Directory Information
 - ```utils``` contains the Finder class for AWS Config anomalous detection. 
 - ```configfinder.py``` is the main python code that runs awsconfigfinder. 

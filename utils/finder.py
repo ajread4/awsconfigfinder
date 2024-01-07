@@ -30,6 +30,7 @@ class Finder():
 
 	# Reformat the Pandas DataFrame for the configuration section 
 	def find_configuration(self,df):
+		print('Expand Configurationo Section')
 		new_df=[]
 		for i in range(len(df)):
 			row=df.iloc[i]
@@ -40,7 +41,12 @@ class Finder():
 	def parse_EC2Instance(self, df):
 		return df[df['resourceType']=='AWS::EC2::Instance']
 
-	# Find difference in instances between two Snapshots
+	# Drill down on only IAM User within the Snapshot
+	def parse_IAMUser(self, df):
+		print('Drill down for IAM User')
+		return df[df['resourceType']=='AWS::IAM::User']
+
+	# Find difference in instances between two Snapshotss
 	def find_EC2(self, first_snapshot,second_snapshot):
 		snapshot1_df=self.find_configurationItems(first_snapshot)
 		snapshot2_df=self.find_configurationItems(second_snapshot)
@@ -97,3 +103,72 @@ class Finder():
 		        	EC2_diff=True 
 		    if not EC2_diff: 
 		        print(f"No differences detected between two provided snapshots")
+
+	def find_AccessKey(self,first_snapshot,second_snapshot):
+		snapshot1_df=self.find_configurationItems(first_snapshot)
+		snapshot2_df=self.find_configurationItems(second_snapshot)
+
+		snapshot1_df=self.parse_IAMUser(first_snapshot)
+		snapshot2_df=self.parse_IAMUser(second_snapshot)
+
+		snapshot1_df=self.find_configuration(snapshot1_df)
+		snapshot2_df=self.find_configuration(snapshot2_df)
+
+		AccessKey_diff=False
+
+		if len(snapshot1_df) > len(snapshot2_df):
+			for row in final_USER_df1.itertuples():
+				print('Starting Analysis per User')
+				df1=final_USER_df1[final_USER_df1['userName']==row.userName]
+				df2=final_USER_df2[final_USER_df2['userName']==row.userName]
+				if (df1.empty or df2.empty):
+					print(f'New User Discovered: {row.userName} in Snapshot 1')
+				else: 
+					for row in df1.itertuples():
+						USER_tags_df1=pd.json_normalize(row.tags)
+					for row in df2.itertuples():
+						USER_tags_df2=pd.json_normalize(row.tags)
+					tags_test_df1 = USER_tags_df1[USER_tags_df1['key'].str.contains('AKIA')]
+					tags_test_df2 = USER_tags_df2[USER_tags_df2['key'].str.contains('AKIA')]
+					if not (tags_test_df1.empty and tags_test_df2.empty):
+						print(f'New User Access Keys Discovered for User: {row.userName}')
+						AccessKey_diff=True
+
+		elif len(snapshot1_df) < len(snapshot2_df):
+			for row in final_USER_df1.itertuples():
+				print('Starting Analysis per User')
+				df1=final_USER_df1[final_USER_df1['userName']==row.userName]
+				df2=final_USER_df2[final_USER_df2['userName']==row.userName]
+				if (df1.empty or df2.empty):
+					print(f'New User Discovered: {row.userName} in Snapshot 2')
+				else: 
+					for row in df1.itertuples():
+						USER_tags_df1=pd.json_normalize(row.tags)
+					for row in df2.itertuples():
+						USER_tags_df2=pd.json_normalize(row.tags)
+					tags_test_df1 = USER_tags_df1[USER_tags_df1['key'].str.contains('AKIA')]
+					tags_test_df2 = USER_tags_df2[USER_tags_df2['key'].str.contains('AKIA')]
+					if not (tags_test_df1.empty and tags_test_df2.empty):
+						print(f'New User Access Keys Discovered for User: {row.userName}')		
+						AccessKey_diff=True
+
+		else:
+			for row in final_USER_df1.itertuples():
+				print('Starting Analysis per User')
+				df1=final_USER_df1[final_USER_df1['userName']==row.userName]
+				df2=final_USER_df2[final_USER_df2['userName']==row.userName]
+				if (df1.empty or df2.empty):
+					print(f'New User Discovered: {row.userName}')
+				else: 
+					for row in df1.itertuples():
+						USER_tags_df1=pd.json_normalize(row.tags)
+					for row in df2.itertuples():
+						USER_tags_df2=pd.json_normalize(row.tags)
+					tags_test_df1 = USER_tags_df1[USER_tags_df1['key'].str.contains('AKIA')]
+					tags_test_df2 = USER_tags_df2[USER_tags_df2['key'].str.contains('AKIA')]
+					if not (tags_test_df1.empty and tags_test_df2.empty):
+						print(f'New User Access Keys Discovered for User: {row.userName}')
+						AccessKey_diff=True
+		if not AccessKey_diff: 
+			print('No AccessKey Differences Discovered')
+
